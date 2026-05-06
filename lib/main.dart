@@ -1,151 +1,92 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:flutter/services.dart';
+import 'db/database_helper.dart';
+import 'screens/splash_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
+  await DatabaseHelper.instance.database;
+  runApp(const NegocioProApp());
 }
 
-//////////////////////////
-// BASE DE DATOS
-//////////////////////////
-class DB {
-  static Future<Database> db() async {
-    return openDatabase(
-      join(await getDatabasesPath(), 'negocio.db'),
-      onCreate: (db, version) async {
-        await db.execute('''
-        CREATE TABLE productos(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          nombre TEXT,
-          stock INTEGER,
-          precio REAL
-        )
-        ''');
-
-        await db.execute('''
-        CREATE TABLE ventas(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          producto TEXT,
-          total REAL
-        )
-        ''');
-
-        // datos iniciales
-        await db.insert("productos", {
-          "nombre": "Nike",
-          "stock": 10,
-          "precio": 150
-        });
-
-        await db.insert("productos", {
-          "nombre": "Adidas",
-          "stock": 8,
-          "precio": 120
-        });
-      },
-      version: 1,
-    );
-  }
-}
-
-//////////////////////////
-// APP
-//////////////////////////
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class NegocioProApp extends StatelessWidget {
+  const NegocioProApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Negocio PRO",
+      title: 'Negocio PRO',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.green),
-      home: const Home(),
-    );
-  }
-}
-
-//////////////////////////
-// HOME
-//////////////////////////
-class Home extends StatefulWidget {
-  const Home({super.key});
-
-  @override
-  State<Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
-  List productos = [];
-  List ventas = [];
-  double total = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    cargar();
-  }
-
-  Future cargar() async {
-    final db = await DB.db();
-    productos = await db.query("productos");
-    ventas = await db.query("ventas");
-
-    total = ventas.fold(0, (sum, v) => sum + (v["total"] as num));
-
-    setState(() {});
-  }
-
-  Future vender(Map p) async {
-    final db = await DB.db();
-
-    if (p["stock"] > 0) {
-      await db.update(
-        "productos",
-        {"stock": p["stock"] - 1},
-        where: "id=?",
-        whereArgs: [p["id"]],
-      );
-
-      await db.insert("ventas", {
-        "producto": p["nombre"],
-        "total": p["precio"],
-      });
-
-      cargar();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("NEGOCIO PRO")),
-      body: Column(
-        children: [
-          Card(
-            child: ListTile(
-              title: const Text("Total ventas"),
-              subtitle: Text("S/ $total"),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF00C853),
+          brightness: Brightness.dark,
+          primary: const Color(0xFF00C853),
+          secondary: const Color(0xFF69F0AE),
+          surface: const Color(0xFF121212),
+          background: const Color(0xFF0A0A0A),
+        ),
+        scaffoldBackgroundColor: const Color(0xFF0A0A0A),
+        fontFamily: 'Roboto',
+        cardTheme: CardTheme(
+          color: const Color(0xFF1E1E1E),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.white.withOpacity(0.05)),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF0A0A0A),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: false,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF2A2A2A),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF00C853), width: 2),
+          ),
+          labelStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00C853),
+            foregroundColor: Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const Text("Productos"),
-          Expanded(
-            child: ListView.builder(
-              itemCount: productos.length,
-              itemBuilder: (_, i) {
-                final p = productos[i];
-                return ListTile(
-                  title: Text(p["nombre"]),
-                  subtitle: Text("Stock: ${p["stock"]}"),
-                  trailing: Text("S/ ${p["precio"]}"),
-                  onTap: () => vender(p),
-                );
-              },
-            ),
-          )
-        ],
+        ),
       ),
+      home: const SplashScreen(),
     );
   }
 }
