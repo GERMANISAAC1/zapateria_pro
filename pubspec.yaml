@@ -4,10 +4,15 @@ publish_to: "none"
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
-
 dependencies:
   flutter:
     sdk: flutter
-
+  sqflite: ^2.3.0
+  path: ^1.8.0
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.3.0
+  path: ^1.8.0
 flutter:
   uses-material-design: true
