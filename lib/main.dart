@@ -5,19 +5,31 @@ import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([
+
+  await _initApp();
+
+  runApp(const NegocioProApp());
+}
+
+/// 🔥 Inicialización centralizada (más limpio y escalable)
+Future<void> _initApp() async {
+  await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ),
   );
+
   await DatabaseHelper.instance.database;
-  runApp(const NegocioProApp());
 }
+
+/// 🌐 Navigator global (útil para navegación desde cualquier lugar)
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class NegocioProApp extends StatelessWidget {
   const NegocioProApp({super.key});
@@ -27,66 +39,82 @@ class NegocioProApp extends StatelessWidget {
     return MaterialApp(
       title: 'Negocio PRO',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF00C853),
-          brightness: Brightness.dark,
-          primary: const Color(0xFF00C853),
-          secondary: const Color(0xFF69F0AE),
-          surface: const Color(0xFF121212),
-          background: const Color(0xFF0A0A0A),
+      navigatorKey: navigatorKey,
+      theme: AppTheme.dark(),
+      home: const SplashScreen(),
+    );
+  }
+}
+
+/// 🎨 Tema separado (más ordenado y profesional)
+class AppTheme {
+  static ThemeData dark() {
+    const primary = Color(0xFF00C853);
+    const background = Color(0xFF0A0A0A);
+    const surface = Color(0xFF121212);
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+
+      colorScheme: const ColorScheme.dark(
+        primary: primary,
+        secondary: Color(0xFF69F0AE),
+        surface: surface,
+      ),
+
+      scaffoldBackgroundColor: background,
+      fontFamily: 'Roboto',
+
+      appBarTheme: const AppBarTheme(
+        backgroundColor: background,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+      ),
+
+      cardTheme: CardTheme(
+        color: surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.white12),
         ),
-        scaffoldBackgroundColor: const Color(0xFF0A0A0A),
-        fontFamily: 'Roboto',
-        cardTheme: CardTheme(
-          color: const Color(0xFF1E1E1E),
-          elevation: 0,
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF1E1E1E),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primary, width: 2),
+        ),
+        hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+        labelStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+      ),
+
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Colors.white.withOpacity(0.05)),
-          ),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0A0A0A),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: false,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF2A2A2A),
-          border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF00C853), width: 2),
-          ),
-          labelStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF00C853),
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            textStyle: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      home: const SplashScreen(),
     );
   }
 }
